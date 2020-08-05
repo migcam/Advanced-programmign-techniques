@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Linq;
 
 namespace TAUT_Tautology
 {
@@ -25,8 +24,6 @@ namespace TAUT_Tautology
 
         }
 
-        public static HashSet<char> Operators = new HashSet<char> { { 'E' }, { 'I' }, { 'D' }, { 'C' }, { 'N' } };
-
         public static bool VerifyTautology(StringBuilder input)
         {
             OriginalExpresion = new StringBuilder(input.ToString());
@@ -40,7 +37,7 @@ namespace TAUT_Tautology
             int count = 0;
             for (int i = 0; i < input.Length; i++)
             {
-                if (!Operators.Contains(input[i]))
+                if((int)input[i] > 96)
                 {
                     if (!CharValues.ContainsKey(input[i]))
                     {
@@ -67,45 +64,28 @@ namespace TAUT_Tautology
         public static StringBuilder OriginalExpresion;
         public static bool[] memo;
 
-        public static bool VerifyBool(StringBuilder input)
+        public static bool VerifyBool2(StringBuilder input)
         {
             StringBuilder tmp = new StringBuilder(input.ToString());
             Stack<char> MyStack = new Stack<char>();
             for (int i = tmp.Length - 1; i > -1; i--)
             {
                 if (tmp[i] == 'C')
-                {
-                    UnitOperand(tmp, MyStack, i, (MyStack.Pop() == '0' || MyStack.Pop() == '0'));
-                }
+                    UnitOperand(tmp, MyStack, i, (MyStack.Pop() == '0' || MyStack.Pop() == '0'),2);
                 else if (tmp[i] == 'D')
-                {
-                    UnitOperand(tmp, MyStack, i, (MyStack.Pop() == '0' && MyStack.Pop() == '0'));
-                }
+                    UnitOperand(tmp, MyStack, i, (MyStack.Pop() == '0' && MyStack.Pop() == '0'),2);
                 else if (tmp[i] == 'N')
-                {
-                    char right = MyStack.Pop();
-                    if (tmp[i + 1] == '1')
-                        tmp[i] = '0';
-                    else
-                        tmp[i] = '1';
-
-                    MyStack.Push(tmp[i]);
-                    tmp.Remove(i + 1, 1);
-                }
+                    UnitOperand(tmp, MyStack, i, (MyStack.Pop() == '1'), 1);
                 else if (tmp[i] == 'I')
                 {
-                    var left = MyStack.Pop();
-                    var right = MyStack.Pop();
-                    UnitOperand(tmp, MyStack, i, (left == '1' && right == '0'));
+                    char left = MyStack.Pop(), right = MyStack.Pop();
+                    UnitOperand(tmp, MyStack, i, (left == '1' && right == '0'),2);
                 }
                 else if (tmp[i] == 'E')
-                {
-                    UnitOperand(tmp, MyStack, i, (MyStack.Pop() != MyStack.Pop()));
-                }
+                    UnitOperand(tmp, MyStack, i, (MyStack.Pop() != MyStack.Pop()),2);
                 else
-                {
                     MyStack.Push(tmp[i]);
-                }
+          
             }
 
             if (tmp[0] == '1')
@@ -114,7 +94,7 @@ namespace TAUT_Tautology
             return false;
         }
 
-        public static void UnitOperand(StringBuilder tmp, Stack<char> MyStack, int i, bool condition)
+        public static void UnitOperand(StringBuilder tmp, Stack<char> MyStack, int i, bool condition, int CantRemoves)
         {
             if (condition)
                 tmp[i] = '0';
@@ -122,7 +102,7 @@ namespace TAUT_Tautology
                 tmp[i] = '1';
 
             MyStack.Push(tmp[i]);
-            tmp.Remove(i + 1, 2);
+            tmp.Remove(i + 1, CantRemoves);
         }
 
         public static bool answer;
@@ -133,7 +113,7 @@ namespace TAUT_Tautology
             if (memo[bin] == true)
                 return;
 
-            if (!VerifyBool(input))
+            if (!VerifyBool2(input))
                 answer = false;
 
             if (n >= status.Length)
@@ -154,18 +134,14 @@ namespace TAUT_Tautology
 
             BF2(input, status, n + 1);
 
-
             memo[bin] = true;
         }
 
         public static int BinToDec(int[] status)
         {
             int res = 0;
-
             for (int i = 0, n = status.Length; i < status.Length; i++, n--)
-            {
                 res += status[i] * (int)Math.Pow(2, n - 1);
-            }
             return res;
         }
     }
